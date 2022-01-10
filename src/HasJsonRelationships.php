@@ -1,5 +1,5 @@
 <?php
-
+   
 namespace Staudenmeir\EloquentJsonRelations;
 
 use Illuminate\Database\Eloquent\Builder;
