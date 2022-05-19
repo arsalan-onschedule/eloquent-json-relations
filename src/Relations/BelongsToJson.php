@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as BaseCollection;
 
 class BelongsToJson extends BelongsTo
 {
-    use InteractsWithPivotRecords, IsJsonRelation;
+    use InteractsWithPivotRecords;
+    use IsJsonRelation;
 
     /**
      * Get the results of the relationship.
@@ -180,7 +182,7 @@ class BelongsToJson extends BelongsTo
     {
         $key = str_replace('->', '.', $this->key);
 
-        $record = collect($parent->{$this->path})
+        $record = (new BaseCollection($parent->{$this->path}))
             ->filter(function ($value) use ($key, $model) {
                 return Arr::get($value, $key) == $model->{$this->ownerKey};
             })->first();
@@ -198,10 +200,10 @@ class BelongsToJson extends BelongsTo
     {
         $model = $model ?: $this->child;
 
-        $keys = (array) $model->{$this->foreignKey};
-
-        return array_filter($keys, function ($key) {
-            return $key !== null;
-        });
+        return (new BaseCollection($model->{$this->foreignKey}))->filter(
+            function ($key) {
+                return $key !== null;
+            }
+        )->all();
     }
 }

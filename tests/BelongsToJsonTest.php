@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Tests\Models\Post;
 use Tests\Models\Role;
 use Tests\Models\User;
+use Tests\Models\UserAsArrayObject;
+use Tests\Models\UserAsCollection;
 
 class BelongsToJsonTest extends TestCase
 {
@@ -44,7 +46,7 @@ class BelongsToJsonTest extends TestCase
     {
         DB::enableQueryLog();
 
-        $roles = (new User)->roles;
+        $roles = (new User())->roles;
 
         $this->assertInstanceOf(Collection::class, $roles);
         $this->assertEmpty(DB::getQueryLog());
@@ -144,7 +146,7 @@ class BelongsToJsonTest extends TestCase
 
     public function testAttach()
     {
-        $user = (new User)->roles()->attach([1, 2]);
+        $user = (new User())->roles()->attach([1, 2]);
 
         $this->assertEquals([1, 2], $user->roles()->pluck('id')->all());
 
@@ -155,7 +157,7 @@ class BelongsToJsonTest extends TestCase
 
     public function testAttachWithObjects()
     {
-        $user = (new User);
+        $user = new User();
         $user->options = [
             'roles' => [
                 ['foo' => 'bar'],
@@ -183,7 +185,7 @@ class BelongsToJsonTest extends TestCase
 
     public function testAttachWithObjectsInColumn()
     {
-        $user = (new User)->roles3()->attach([1 => ['active' => true], 2 => ['active' => false]]);
+        $user = (new User())->roles3()->attach([1 => ['active' => true], 2 => ['active' => false]]);
 
         $this->assertEquals([1, 2], $user->roles3->pluck('id')->all());
         $this->assertEquals([true, false], $user->roles3->pluck('pivot.active')->all());
@@ -252,10 +254,27 @@ class BelongsToJsonTest extends TestCase
         $this->assertEquals(['foo' => 'bar'], $user->options['roles'][2]);
     }
 
-    public function testForeignKeys()
+    /**
+     * @dataProvider foreignKeysDataProvider
+     */
+    public function testForeignKeys($user)
     {
-        $keys = User::first()->roles()->getForeignKeys();
+        $keys = $user::first()->roles()->getForeignKeys();
 
         $this->assertEquals([1, 2], $keys);
+    }
+
+    public function foreignKeysDataProvider()
+    {
+        $users = [
+            [User::class],
+        ];
+
+        if (class_exists('Illuminate\Database\Eloquent\Casts\AsArrayObject')) {
+            $users[] = [UserAsArrayObject::class];
+            $users[] = [UserAsCollection::class];
+        }
+
+        return $users;
     }
 }
