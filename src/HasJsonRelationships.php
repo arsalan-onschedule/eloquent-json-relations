@@ -126,7 +126,7 @@ trait HasJsonRelationships
 
     /**
      * Instantiate a new BelongsTo relationship.
-     *
+     *newHasOne
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param \Illuminate\Database\Eloquent\Model $child
      * @param string $foreignKey
@@ -199,6 +199,26 @@ trait HasJsonRelationships
         }
 
         return new MorphMany($query, $parent, $type, $id, $localKey);
+    }
+
+    /**
+     * Define an one-to-one JSON relationship.
+     *
+     * @param string $related
+     * @param string $foreignKey
+     * @param string $localKey
+     */
+
+    public function hasOneJson($related, $foreignKey = null, $localKey = null){
+
+        $instance = $this->newRelatedInstance($related);
+
+        return $this->newHasOneJson(
+            $instance->newQuery(),
+            $this,
+            $foreignKey,
+            $localKey
+        );
     }
 
     /**
